@@ -1,0 +1,22 @@
+﻿
+Name                      Mode   Length
+----                      ----   ------
+.git                      d--h--       
+lib                       d-----       
+src                       d-----       
+.gitignore                -a---- 71    
+directory-tree-clean.txt  -a---- 37059 
+example.svg               -a---- 904   
+IMPLEMENTATION.md         -a---- 2697  
+index.html                -a---- 28883 
+index_old.html            -a---- 25960 
+lib-audit.txt             -a---- 1889  
+package.backup.json       -a---- 448   
+rag-vs-agentic.svg        -a---- 13282 
+README.md                 -a---- 4196  
+server.local.backup.js    -a---- 3622  
+styles.css                -a---- 2668  
+SVG_RENDERING_RESEARCH.md -a---- 16611 
+
+
+
