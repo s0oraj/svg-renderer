@@ -548,21 +548,13 @@
 
       async exportSlideToPdfPage(pdf, svgText, dims, slideNumber) {
         this.log(`Slide ${slideNumber}: export started.`);
-        this.log(`Slide ${slideNumber}: fallback order = native DOM raster → svg2pdf vector → Two.js canvas → image canvas.`);
 
-        // Best visual match to browser preview. This usually handles complex SVG effects better.
-        const domRasterOk = await this.tryDomRasterFallback(pdf, svgText, dims, slideNumber);
-        if (domRasterOk) return true;
-
-        // Best vector output when the SVG features are supported by svg2pdf.
         const vectorOk = await this.tryVectorSvg2Pdf(pdf, svgText, dims, slideNumber);
         if (vectorOk) return true;
 
-        // Alternative interpreted renderer fallback.
-        const twoOk = await this.tryTwoJsRasterFallback(pdf, svgText, dims, slideNumber);
-        if (twoOk) return true;
+        const domRasterOk = await this.tryDomRasterFallback(pdf, svgText, dims, slideNumber);
+        if (domRasterOk) return true;
 
-        // Final simple browser image/canvas fallback.
         const imageRasterOk = await this.tryImageCanvasFallback(pdf, svgText, dims, slideNumber);
         if (imageRasterOk) return true;
 
@@ -576,7 +568,7 @@ async tryVectorSvg2Pdf(pdf, svgText, dims, slideNumber) {
     const svg2pdfFn = this.getSvg2PdfFunction();
 
     if (!svg2pdfFn) {
-      this.log(`Slide ${slideNumber}: svg2pdf vector skipped - callable function not found.`);
+      this.log(`Slide ${slideNumber}: vector skipped - svg2pdf callable function not found.`);
       return false;
     }
 
@@ -612,27 +604,22 @@ async tryVectorSvg2Pdf(pdf, svgText, dims, slideNumber) {
       svgElement.parentNode.removeChild(svgElement);
     }
 
-    this.log(`Slide ${slideNumber}: svg2pdf vector export failed - ${error.message}`);
+    this.log(`Slide ${slideNumber}: vector export failed - ${error.message}`);
     return false;
   }
 }
 
       async tryDomRasterFallback(pdf, svgText, dims, slideNumber) {
-        let host = null;
-
         try {
           if (typeof html2canvas === "undefined") {
-            this.log(`Slide ${slideNumber}: native DOM raster skipped - html2canvas missing.`);
+            this.log(`Slide ${slideNumber}: DOM raster skipped - html2canvas missing.`);
             return false;
           }
 
           const parsed = this.parseSvg(svgText);
-          if (!parsed.ok) {
-            this.log(`Slide ${slideNumber}: native DOM raster skipped - invalid SVG.`);
-            return false;
-          }
+          if (!parsed.ok) return false;
 
-          host = document.createElement("div");
+          const host = document.createElement("div");
           host.style.position = "fixed";
           host.style.left = "-100000px";
           host.style.top = "0";
@@ -658,111 +645,15 @@ async tryVectorSvg2Pdf(pdf, svgText, dims, slideNumber) {
             logging: false
           });
 
-          const imgData = canvas.toDataURL("image/png");
-          pdf.addImage(imgData, "PNG", 0, 0, dims.width, dims.height);
-
-          host.remove();
-
-          this.log(`Slide ${slideNumber}: native DOM raster success using html2canvas.`);
-          return true;
-        } catch (error) {
-          if (host && host.parentNode) {
-            host.remove();
-          }
-
-          this.log(`Slide ${slideNumber}: native DOM raster failed - ${error.message}`);
-          return false;
-        }
-      }
-
-      async tryTwoJsRasterFallback(pdf, svgText, dims, slideNumber) {
-        let host = null;
-
-        try {
-          if (typeof Two === "undefined") {
-            this.log(`Slide ${slideNumber}: Two.js fallback skipped - Two.js missing.`);
-            return false;
-          }
-
-          const parsed = this.parseSvg(svgText);
-          if (!parsed.ok) {
-            this.log(`Slide ${slideNumber}: Two.js fallback skipped - invalid SVG.`);
-            return false;
-          }
-
-          host = document.createElement("div");
-          host.style.position = "fixed";
-          host.style.left = "-100000px";
-          host.style.top = "0";
-          host.style.width = dims.width + "px";
-          host.style.height = dims.height + "px";
-          host.style.background = "white";
-          host.style.overflow = "hidden";
-          document.body.appendChild(host);
-
-          const rendererType = Two.Types && Two.Types.canvas ? Two.Types.canvas : "canvas";
-
-          const two = new Two({
-            type: rendererType,
-            width: dims.width,
-            height: dims.height,
-            autostart: false
-          }).appendTo(host);
-
-          const svgElement = document.importNode(parsed.svgElement, true);
-          svgElement.setAttribute("width", dims.width);
-          svgElement.setAttribute("height", dims.height);
-
-          const interpretFn =
-            typeof two.interpret === "function"
-              ? two.interpret.bind(two)
-              : typeof Two.interpret === "function"
-                ? Two.interpret.bind(Two)
-                : null;
-
-          if (!interpretFn) {
-            this.log(`Slide ${slideNumber}: Two.js fallback failed - interpret function missing.`);
-            host.remove();
-            return false;
-          }
-
-          const interpreted = interpretFn(svgElement);
-
-          if (!interpreted) {
-            this.log(`Slide ${slideNumber}: Two.js fallback failed - interpreter returned nothing.`);
-            host.remove();
-            return false;
-          }
-
-          try {
-            two.add(interpreted);
-          } catch (addError) {
-            this.log(`Slide ${slideNumber}: Two.js add warning - ${addError.message}`);
-          }
-
-          two.update();
-
-          const canvas = two.renderer && two.renderer.domElement;
-
-          if (!canvas || canvas.tagName.toLowerCase() !== "canvas") {
-            this.log(`Slide ${slideNumber}: Two.js fallback failed - canvas renderer unavailable.`);
-            host.remove();
-            return false;
-          }
+          document.body.removeChild(host);
 
           const imgData = canvas.toDataURL("image/png");
           pdf.addImage(imgData, "PNG", 0, 0, dims.width, dims.height);
 
-          host.remove();
-
-          this.log(`Slide ${slideNumber}: Two.js raster fallback success.`);
+          this.log(`Slide ${slideNumber}: DOM raster fallback success using html2canvas.`);
           return true;
         } catch (error) {
-          if (host && host.parentNode) {
-            host.remove();
-          }
-
-          this.log(`Slide ${slideNumber}: Two.js raster fallback failed - ${error.message}`);
+          this.log(`Slide ${slideNumber}: DOM raster fallback failed - ${error.message}`);
           return false;
         }
       }
