@@ -1,0 +1,12 @@
+node_modules
+*.DS_Store
+junk/
+*.log
+docs.json
+dist
+.idea
+.codacy
+tests/typescript/package-lock.json
+
+#Ignore vscode AI rules
+.github/instructions/codacy.instructions.md

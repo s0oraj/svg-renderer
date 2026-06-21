@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LinkedIn Carousel SVG to PDF</title>
+  <link rel="stylesheet" href="styles.css" />
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      color: #17202a;
+    }
+
+    .app-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    .control-panel,
+    .editor-section,
+    .preview-section,
+    .debug-section {
+      background: #fff;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    }
+
+    h1, h2, h3 {
+      margin-top: 0;
+    }
+
+    .setup-controls,
+    .preview-controls {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    input,
+    textarea,
+    button {
+      font: inherit;
+    }
+
+    input[type="number"] {
+      width: 100px;
+      padding: 8px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 8px;
+      padding: 10px 16px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .btn-primary {
+      background: #0a66c2;
+      color: white;
+    }
+
+    .btn-secondary {
+      background: #e8eef5;
+      color: #17202a;
+    }
+
+    .btn-success {
+      background: #16833a;
+      color: white;
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .slide-card {
+      border: 1px solid #d8dee6;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    .slide-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #f0f4f8;
+      padding: 12px 16px;
+      border-bottom: 1px solid #d8dee6;
+    }
+
+    .slide-body {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+      min-height: 420px;
+    }
+
+    .editor-pane,
+    .preview-pane {
+      padding: 16px;
+    }
+
+    .editor-pane {
+      border-right: 1px solid #d8dee6;
+    }
+
+    textarea.svg-editor {
+      width: 100%;
+      height: 360px;
+      resize: vertical;
+      font-family: Consolas, monospace;
+      font-size: 13px;
+      line-height: 1.4;
+      padding: 12px;
+      box-sizing: border-box;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+    }
+
+    .svg-preview {
+      width: 100%;
+      height: 360px;
+      border: 1px dashed #b7c3d0;
+      border-radius: 8px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: auto;
+      background: white;
+    }
+
+    .svg-preview svg {
+      max-width: 100%;
+      max-height: 100%;
+    }
+
+    .slide-meta {
+      font-size: 12px;
+      color: #52616f;
+      margin-top: 8px;
+      font-family: Consolas, monospace;
+      white-space: pre-wrap;
+    }
+
+    .debug-log {
+      background: #111827;
+      color: #d1fae5;
+      padding: 14px;
+      border-radius: 8px;
+      min-height: 160px;
+      max-height: 320px;
+      overflow: auto;
+      font-family: Consolas, monospace;
+      font-size: 12px;
+      white-space: pre-wrap;
+    }
+
+    .pdf-preview {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    .pdf-page-preview {
+      background: #fff;
+      border: 1px solid #d8dee6;
+      border-radius: 10px;
+      padding: 10px;
+      text-align: center;
+    }
+
+    .pdf-page-preview .page-box {
+      border: 1px solid #cbd5e1;
+      background: white;
+      height: 260px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .pdf-page-preview svg {
+      max-width: 100%;
+      max-height: 100%;
+    }
+
+    @media (max-width: 900px) {
+      .slide-body {
+        grid-template-columns: 1fr;
+      }
+
+      .editor-pane {
+        border-right: 0;
+        border-bottom: 1px solid #d8dee6;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app-container">
+    <div class="control-panel">
+      <h1>LinkedIn Carousel SVG to PDF</h1>
+
+      <div class="setup-section">
+        <h2>Step 1: Configure Slides</h2>
+
+        <div class="setup-controls">
+          <label for="numPages">Number of slides:</label>
+          <input type="number" id="numPages" min="1" max="100" value="1" />
+
+          <button id="generatePagesBtn" class="btn-primary">Generate Editors</button>
+          <button id="loadSampleBtn" class="btn-secondary">Load Sample SVG</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="editor-section">
+      <h2>Step 2: Paste SVG per Slide</h2>
+      <div id="pagesContainer"></div>
+    </div>
+
+    <div class="preview-section">
+      <h2>Step 3: Preview & Export</h2>
+
+      <div class="preview-controls">
+        <button id="previewPdfBtn" class="btn-secondary">Preview Slides</button>
+        <button id="generatePdfBtn" class="btn-primary">Generate PDF</button>
+        <button id="downloadPdfBtn" class="btn-success" disabled>Download PDF</button>
+      </div>
+
+      <div id="pdfPreview" class="pdf-preview"></div>
+    </div>
+
+    <div class="debug-section">
+      <h2>Debug Mode</h2>
+      <div id="debugLog" class="debug-log"></div>
+    </div>
+  </div>
+
+  <!-- Core export libraries -->
+  <script src="lib/jspdf.js"></script>
+  <script src="lib/html2canvas.js"></script>
+
+  <!-- Optional renderer/manipulation libraries -->
+  <script src="lib/svg.js"></script>
+  <script src="lib/raphael.js"></script>
+  <script src="lib/snap.svg.js"></script>
+  <script src="lib/paper.js"></script>
+  <script src="lib/two.js-0.8.21/build/two.min.js"></script>
+  <script src="lib/svg2pdf.js-2.7.0/dist/svg2pdf.umd.min.js"></script>
+
+  <script>
+    class CarouselSvgPdfApp {
+      constructor() {
+        this.slides = [];
+        this.generatedPdfBlob = null;
+
+        this.pagesContainer = document.getElementById("pagesContainer");
+        this.debugLog = document.getElementById("debugLog");
+        this.pdfPreview = document.getElementById("pdfPreview");
+        this.downloadPdfBtn = document.getElementById("downloadPdfBtn");
+
+        this.bindEvents();
+        this.logLibraryStatus();
+        this.generateEditors();
+      }
+
+      bindEvents() {
+        document.getElementById("generatePagesBtn").addEventListener("click", () => {
+          this.generateEditors();
+        });
+
+        document.getElementById("previewPdfBtn").addEventListener("click", () => {
+          this.previewSlides();
+        });
+
+        document.getElementById("generatePdfBtn").addEventListener("click", () => {
+          this.generatePdf();
+        });
+
+        document.getElementById("downloadPdfBtn").addEventListener("click", () => {
+          this.downloadPdf();
+        });
+
+        document.getElementById("loadSampleBtn").addEventListener("click", () => {
+          this.loadSample();
+        });
+      }
+
+      log(message) {
+        const time = new Date().toLocaleTimeString();
+        this.debugLog.textContent += `[${time}] ${message}\n`;
+        this.debugLog.scrollTop = this.debugLog.scrollHeight;
+        console.log(message);
+      }
+
+      logLibraryStatus() {
+        this.log("Library status:");
+        this.log(`jsPDF: ${this.getJsPDFConstructor() ? "loaded" : "missing"}`);
+        this.log(`html2canvas: ${typeof html2canvas !== "undefined" ? "loaded" : "missing"}`);
+        this.log(`svg2pdf callable: ${this.getSvg2PdfFunction() ? "yes" : "no"}`);
+        this.log(`SVG.js: ${typeof SVG !== "undefined" ? "loaded" : "missing"}`);
+        this.log(`Snap.svg: ${typeof Snap !== "undefined" ? "loaded" : "missing"}`);
+        this.log(`Raphael: ${typeof Raphael !== "undefined" ? "loaded" : "missing"}`);
+        this.log(`Paper.js: ${typeof paper !== "undefined" ? "loaded" : "missing"}`);
+        this.log(`Two.js: ${typeof Two !== "undefined" ? "loaded" : "missing"}`);
+      }
+
+      generateEditors() {
+        const count = Math.max(1, Math.min(100, Number(document.getElementById("numPages").value || 1)));
+
+        this.slides = [];
+        this.pagesContainer.innerHTML = "";
+        this.pdfPreview.innerHTML = "";
+        this.generatedPdfBlob = null;
+        this.downloadPdfBtn.disabled = true;
+
+        for (let i = 0; i < count; i++) {
+          const slide = {
+            index: i,
+            svgText: "",
+            dimensions: null,
+            card: null,
+            textarea: null,
+            preview: null,
+            meta: null
+          };
+
+          const card = document.createElement("div");
+          card.className = "slide-card";
+
+          card.innerHTML = `
+            <div class="slide-header">
+              <h3>Slide ${i + 1}</h3>
+              <button class="btn-secondary clear-slide-btn" type="button">Clear</button>
+            </div>
+
+            <div class="slide-body">
+              <div class="editor-pane">
+                <textarea class="svg-editor" placeholder="Paste SVG code for slide ${i + 1} here"></textarea>
+              </div>
+
+              <div class="preview-pane">
+                <div class="svg-preview"></div>
+                <div class="slide-meta"></div>
+              </div>
+            </div>
+          `;
+
+          slide.card = card;
+          slide.textarea = card.querySelector(".svg-editor");
+          slide.preview = card.querySelector(".svg-preview");
+          slide.meta = card.querySelector(".slide-meta");
+
+          slide.textarea.addEventListener("input", () => {
+            slide.svgText = slide.textarea.value.trim();
+            this.renderSlide(slide);
+          });
+
+          card.querySelector(".clear-slide-btn").addEventListener("click", () => {
+            slide.textarea.value = "";
+            slide.svgText = "";
+            slide.preview.innerHTML = "";
+            slide.meta.textContent = "";
+          });
+
+          this.pagesContainer.appendChild(card);
+          this.slides.push(slide);
+        }
+
+        this.log(`Generated ${count} slide editor(s).`);
+      }
+
+      loadSample() {
+        if (!this.slides.length) this.generateEditors();
+
+        const sample = `
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1350" width="1080" height="1350">
+  <defs>
+    <linearGradient id="g" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#0A66C2"/>
+      <stop offset="100%" stop-color="#00A0DC"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="16" stdDeviation="18" flood-opacity="0.22"/>
+    </filter>
+  </defs>
+  <rect width="1080" height="1350" fill="#f4f6f8"/>
+  <rect x="90" y="120" width="900" height="1110" rx="48" fill="white" filter="url(#shadow)"/>
+  <text x="140" y="260" font-size="64" font-family="Arial" font-weight="700" fill="#17202a">
+    SVG Carousel
+  </text>
+  <text x="140" y="350" font-size="34" font-family="Arial" fill="#52616f">
+    Browser preview + PDF fallback export
+  </text>
+  <circle cx="790" cy="870" r="190" fill="url(#g)" opacity="0.95"/>
+  <path d="M220 760 C360 620, 500 900, 680 720 S900 640, 940 780"
+        fill="none" stroke="#0A66C2" stroke-width="26" stroke-linecap="round"/>
+</svg>`.trim();
+
+        this.slides[0].textarea.value = sample;
+        this.slides[0].svgText = sample;
+        this.renderSlide(this.slides[0]);
+        this.log("Loaded sample SVG into slide 1.");
+      }
+
+      renderSlide(slide) {
+        slide.preview.innerHTML = "";
+        slide.meta.textContent = "";
+
+        if (!slide.svgText) return;
+
+        const parsed = this.parseSvg(slide.svgText);
+
+        if (!parsed.ok) {
+          slide.preview.innerHTML = `<pre style="color:red;padding:12px;">${this.escapeHtml(parsed.error)}</pre>`;
+          slide.meta.textContent = "Invalid SVG";
+          this.log(`Slide ${slide.index + 1}: invalid SVG - ${parsed.error}`);
+          return;
+        }
+
+        slide.dimensions = this.getSvgDimensions(parsed.svgElement);
+
+        const imported = document.importNode(parsed.svgElement, true);
+        imported.removeAttribute("width");
+        imported.removeAttribute("height");
+        imported.style.width = "100%";
+        imported.style.height = "100%";
+
+        slide.preview.appendChild(imported);
+
+        slide.meta.textContent =
+          `Dimensions: ${slide.dimensions.width} x ${slide.dimensions.height} px\n` +
+          `Source: ${slide.dimensions.source}`;
+
+        this.log(`Slide ${slide.index + 1}: preview rendered natively. ${slide.dimensions.width}x${slide.dimensions.height} from ${slide.dimensions.source}`);
+      }
+
+      previewSlides() {
+        this.pdfPreview.innerHTML = "";
+
+        this.slides.forEach(slide => {
+          if (!slide.svgText) return;
+
+          const parsed = this.parseSvg(slide.svgText);
+          if (!parsed.ok) return;
+
+          const dims = this.getSvgDimensions(parsed.svgElement);
+
+          const box = document.createElement("div");
+          box.className = "pdf-page-preview";
+
+          const imported = document.importNode(parsed.svgElement, true);
+          imported.removeAttribute("width");
+          imported.removeAttribute("height");
+          imported.style.width = "100%";
+          imported.style.height = "100%";
+
+          box.innerHTML = `
+            <strong>Slide ${slide.index + 1}</strong>
+            <div style="font-size:12px;color:#52616f;margin:6px 0;">${dims.width} × ${dims.height}px</div>
+            <div class="page-box"></div>
+          `;
+
+          box.querySelector(".page-box").appendChild(imported);
+          this.pdfPreview.appendChild(box);
+        });
+
+        this.log("Preview refreshed.");
+      }
+
+      async generatePdf() {
+        this.generatedPdfBlob = null;
+        this.downloadPdfBtn.disabled = true;
+
+        const activeSlides = this.slides.filter(s => s.svgText && s.svgText.trim());
+
+        if (!activeSlides.length) {
+          alert("Paste at least one SVG.");
+          return;
+        }
+
+        const jsPDFCtor = this.getJsPDFConstructor();
+
+        if (!jsPDFCtor) {
+          alert("jsPDF is not loaded. Check lib/jspdf.js path.");
+          this.log("PDF failed: jsPDF missing.");
+          return;
+        }
+
+        let pdf = null;
+
+        for (let i = 0; i < activeSlides.length; i++) {
+          const slide = activeSlides[i];
+          const parsed = this.parseSvg(slide.svgText);
+
+          if (!parsed.ok) {
+            this.log(`Slide ${slide.index + 1}: skipped invalid SVG.`);
+            continue;
+          }
+
+          const dims = this.getSvgDimensions(parsed.svgElement);
+          const orientation = dims.width >= dims.height ? "landscape" : "portrait";
+
+          if (!pdf) {
+            pdf = new jsPDFCtor({
+              orientation,
+              unit: "px",
+              format: [dims.width, dims.height],
+              compress: true
+            });
+          } else {
+            pdf.addPage([dims.width, dims.height], orientation);
+            pdf.setPage(pdf.getNumberOfPages());
+          }
+
+          const exported = await this.exportSlideToPdfPage(pdf, slide.svgText, dims, slide.index + 1);
+
+          if (!exported) {
+            this.log(`Slide ${slide.index + 1}: all export methods failed.`);
+          }
+        }
+
+        if (!pdf) {
+          alert("No valid SVG slides to export.");
+          return;
+        }
+
+        this.generatedPdfBlob = pdf.output("blob");
+        this.downloadPdfBtn.disabled = false;
+        this.previewSlides();
+
+        this.log("PDF generated. Download button enabled.");
+      }
+
+      async exportSlideToPdfPage(pdf, svgText, dims, slideNumber) {
+        this.log(`Slide ${slideNumber}: export started.`);
+
+        const vectorOk = await this.tryVectorSvg2Pdf(pdf, svgText, dims, slideNumber);
+        if (vectorOk) return true;
+
+        const domRasterOk = await this.tryDomRasterFallback(pdf, svgText, dims, slideNumber);
+        if (domRasterOk) return true;
+
+        const imageRasterOk = await this.tryImageCanvasFallback(pdf, svgText, dims, slideNumber);
+        if (imageRasterOk) return true;
+
+        return false;
+      }
+
+async tryVectorSvg2Pdf(pdf, svgText, dims, slideNumber) {
+  let svgElement = null;
+
+  try {
+    const svg2pdfFn = this.getSvg2PdfFunction();
+
+    if (!svg2pdfFn) {
+      this.log(`Slide ${slideNumber}: vector skipped - svg2pdf callable function not found.`);
+      return false;
+    }
+
+    const parsed = this.parseSvg(svgText);
+    if (!parsed.ok) return false;
+
+    svgElement = document.importNode(parsed.svgElement, true);
+
+    svgElement.setAttribute("width", dims.width);
+    svgElement.setAttribute("height", dims.height);
+    svgElement.style.width = dims.width + "px";
+    svgElement.style.height = dims.height + "px";
+    svgElement.style.position = "fixed";
+    svgElement.style.left = "-100000px";
+    svgElement.style.top = "-100000px";
+    svgElement.style.background = "white";
+
+    document.body.appendChild(svgElement);
+
+    await svg2pdfFn(svgElement, pdf, {
+      x: 0,
+      y: 0,
+      width: dims.width,
+      height: dims.height
+    });
+
+    document.body.removeChild(svgElement);
+
+    this.log(`Slide ${slideNumber}: vector export success using svg2pdf.`);
+    return true;
+  } catch (error) {
+    if (svgElement && svgElement.parentNode) {
+      svgElement.parentNode.removeChild(svgElement);
+    }
+
+    this.log(`Slide ${slideNumber}: vector export failed - ${error.message}`);
+    return false;
+  }
+}
+
+      async tryDomRasterFallback(pdf, svgText, dims, slideNumber) {
+        try {
+          if (typeof html2canvas === "undefined") {
+            this.log(`Slide ${slideNumber}: DOM raster skipped - html2canvas missing.`);
+            return false;
+          }
+
+          const parsed = this.parseSvg(svgText);
+          if (!parsed.ok) return false;
+
+          const host = document.createElement("div");
+          host.style.position = "fixed";
+          host.style.left = "-100000px";
+          host.style.top = "0";
+          host.style.width = dims.width + "px";
+          host.style.height = dims.height + "px";
+          host.style.background = "white";
+          host.style.overflow = "hidden";
+
+          const svgElement = document.importNode(parsed.svgElement, true);
+          svgElement.setAttribute("width", dims.width);
+          svgElement.setAttribute("height", dims.height);
+          svgElement.style.width = dims.width + "px";
+          svgElement.style.height = dims.height + "px";
+
+          host.appendChild(svgElement);
+          document.body.appendChild(host);
+
+          const canvas = await html2canvas(host, {
+            backgroundColor: "#ffffff",
+            scale: 2,
+            useCORS: true,
+            allowTaint: true,
+            logging: false
+          });
+
+          document.body.removeChild(host);
+
+          const imgData = canvas.toDataURL("image/png");
+          pdf.addImage(imgData, "PNG", 0, 0, dims.width, dims.height);
+
+          this.log(`Slide ${slideNumber}: DOM raster fallback success using html2canvas.`);
+          return true;
+        } catch (error) {
+          this.log(`Slide ${slideNumber}: DOM raster fallback failed - ${error.message}`);
+          return false;
+        }
+      }
+
+      async tryImageCanvasFallback(pdf, svgText, dims, slideNumber) {
+        return new Promise(resolve => {
+          try {
+            const svgBlob = new Blob([svgText], { type: "image/svg+xml;charset=utf-8" });
+            const url = URL.createObjectURL(svgBlob);
+
+            const img = new Image();
+            img.crossOrigin = "anonymous";
+
+            img.onload = () => {
+              try {
+                const canvas = document.createElement("canvas");
+                canvas.width = dims.width * 2;
+                canvas.height = dims.height * 2;
+
+                const ctx = canvas.getContext("2d");
+                ctx.fillStyle = "#ffffff";
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+                URL.revokeObjectURL(url);
+
+                const imgData = canvas.toDataURL("image/png");
+                pdf.addImage(imgData, "PNG", 0, 0, dims.width, dims.height);
+
+                this.log(`Slide ${slideNumber}: Image + Canvas fallback success.`);
+                resolve(true);
+              } catch (error) {
+                URL.revokeObjectURL(url);
+                this.log(`Slide ${slideNumber}: Image + Canvas fallback failed - ${error.message}`);
+                resolve(false);
+              }
+            };
+
+            img.onerror = () => {
+              URL.revokeObjectURL(url);
+              this.log(`Slide ${slideNumber}: Image + Canvas fallback failed - image could not load.`);
+              resolve(false);
+            };
+
+            img.src = url;
+          } catch (error) {
+            this.log(`Slide ${slideNumber}: Image + Canvas setup failed - ${error.message}`);
+            resolve(false);
+          }
+        });
+      }
+
+      downloadPdf() {
+        if (!this.generatedPdfBlob) return;
+
+        const url = URL.createObjectURL(this.generatedPdfBlob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "linkedin-carousel.pdf";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        this.log("PDF downloaded as linkedin-carousel.pdf.");
+      }
+
+      parseSvg(svgText) {
+        try {
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(svgText, "image/svg+xml");
+
+          const parserError = doc.querySelector("parsererror");
+          if (parserError) {
+            return {
+              ok: false,
+              error: parserError.textContent || "Parser error"
+            };
+          }
+
+          const svgElement = doc.documentElement;
+
+          if (!svgElement || svgElement.tagName.toLowerCase() !== "svg") {
+            return {
+              ok: false,
+              error: "Root element is not <svg>"
+            };
+          }
+
+          return {
+            ok: true,
+            svgElement
+          };
+        } catch (error) {
+          return {
+            ok: false,
+            error: error.message
+          };
+        }
+      }
+
+      getSvgDimensions(svgElement) {
+        const widthAttr = svgElement.getAttribute("width");
+        const heightAttr = svgElement.getAttribute("height");
+        const viewBox = svgElement.getAttribute("viewBox");
+
+        const width = this.parseSvgLength(widthAttr);
+        const height = this.parseSvgLength(heightAttr);
+
+        if (width && height) {
+          return {
+            width: Math.round(width),
+            height: Math.round(height),
+            source: "width/height attributes"
+          };
+        }
+
+        if (viewBox) {
+          const parts = viewBox
+            .trim()
+            .split(/[\s,]+/)
+            .map(Number);
+
+          if (parts.length === 4 && parts.every(n => Number.isFinite(n))) {
+            return {
+              width: Math.round(Math.abs(parts[2])),
+              height: Math.round(Math.abs(parts[3])),
+              source: "viewBox"
+            };
+          }
+        }
+
+        return {
+          width: 1080,
+          height: 1350,
+          source: "fallback LinkedIn portrait default"
+        };
+      }
+
+      parseSvgLength(value) {
+        if (!value) return null;
+
+        const cleaned = String(value).trim();
+
+        if (cleaned.endsWith("%")) return null;
+
+        const match = cleaned.match(/^([\d.]+)\s*(px|pt|mm|cm|in)?$/i);
+        if (!match) return null;
+
+        const num = Number(match[1]);
+        const unit = (match[2] || "px").toLowerCase();
+
+        if (!Number.isFinite(num)) return null;
+
+        const pxPerInch = 96;
+
+        if (unit === "px") return num;
+        if (unit === "pt") return num * (96 / 72);
+        if (unit === "in") return num * pxPerInch;
+        if (unit === "mm") return num * (pxPerInch / 25.4);
+        if (unit === "cm") return num * (pxPerInch / 2.54);
+
+        return num;
+      }
+
+      getJsPDFConstructor() {
+        if (window.jspdf && window.jspdf.jsPDF) return window.jspdf.jsPDF;
+        if (window.jsPDF) return window.jsPDF;
+        return null;
+      }
+
+getSvg2PdfFunction() {
+  if (window.svg2pdf && typeof window.svg2pdf.svg2pdf === "function") {
+    return window.svg2pdf.svg2pdf;
+  }
+
+  if (typeof window.svg2pdf === "function") {
+    return window.svg2pdf;
+  }
+
+  if (window.svg2pdf && typeof window.svg2pdf.default === "function") {
+    return window.svg2pdf.default;
+  }
+
+  if (window.svg2pdfjs && typeof window.svg2pdfjs.svg2pdf === "function") {
+    return window.svg2pdfjs.svg2pdf;
+  }
+
+  if (window.jspdf && typeof window.jspdf.svg2pdf === "function") {
+    return window.jspdf.svg2pdf;
+  }
+
+  return null;
+}
+
+      escapeHtml(text) {
+        return String(text)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      window.app = new CarouselSvgPdfApp();
+    });
+  </script>
+</body>
+</html>

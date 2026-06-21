@@ -1,0 +1,58 @@
+﻿LIB AUDIT
+
+Total files in lib:
+536
+
+Files by extension:
+
+Count Name          
+----- ----          
+  106 .svg          
+  100 .js           
+   76 .pdf          
+   68 .png          
+   65 .ts           
+   62 .md           
+   13 .json         
+   10 .vue          
+    5 .yml          
+    4 .map          
+    3 .jpg          
+    3 .css          
+    3 .html         
+    2 .styl         
+    2               
+    2 .gitignore    
+    1 .template     
+    1 .txt          
+    1 .orig         
+    1 .gif          
+    1 .editorconfig 
+    1 .sh           
+    1 .eslintignore 
+    1 .ttf          
+    1 .mjs          
+    1 .nvmrc        
+    1 .npmrc        
+    1 .gitattributes
+
+
+
+
+Important JS files:
+
+FullName                                                                              Length
+--------                                                                              ------
+C:\Users\SU20587801\Desktop\svg-renderer\lib\html2canvas.js                           198708
+C:\Users\SU20587801\Desktop\svg-renderer\lib\jspdf.js                                 364859
+C:\Users\SU20587801\Desktop\svg-renderer\lib\svg2pdf.js-2.7.0\dist\svg2pdf.es.js      180107
+C:\Users\SU20587801\Desktop\svg-renderer\lib\svg2pdf.js-2.7.0\dist\svg2pdf.es.min.js   69593
+C:\Users\SU20587801\Desktop\svg-renderer\lib\svg2pdf.js-2.7.0\dist\svg2pdf.umd.js     255226
+C:\Users\SU20587801\Desktop\svg-renderer\lib\svg2pdf.js-2.7.0\dist\svg2pdf.umd.min.js  87158
+C:\Users\SU20587801\Desktop\svg-renderer\lib\two.js-0.8.21\build\two.js               503920
+C:\Users\SU20587801\Desktop\svg-renderer\lib\two.js-0.8.21\build\two.min.js           192146
+C:\Users\SU20587801\Desktop\svg-renderer\lib\two.js-0.8.21\build\two.module.js        483947
+C:\Users\SU20587801\Desktop\svg-renderer\lib\two.js-0.8.21\src\two.js                  36070
+
+
+
